@@ -1,0 +1,27 @@
+Top 3 most common religions in the 10 poorest countries in the world
+
+# This query starts by making a subquery that pulls out the 10 "poorest" countries, which I defined as having the lowest GDP--not necessarily the right way to do it. Then I attached all of the religions to that country and ordered by percentage. I did not isolate the top three, that would be a huge amount of extra work, and very advanced because you have to use a partition. So it would be a waste of time, but I did it anyway for very advanced users to see.
+
+WITH poorest as(
+SELECT country as country_name, gdp FROM economy ORDER BY gdp LIMIT 10)
+SELECT poorest.country_name, poorest.gdp, religion.name, religion.percentage
+FROM poorest JOIN religion ON religion.country = poorest.country_name
+ORDER BY gdp, religion.percentage DESC;
+
+
+# ADVANCED METHOD:
+
+WITH topthree as
+(SELECT rank_filter.* FROM (
+        SELECT religion.*, 
+        rank() OVER (
+            PARTITION BY country
+            ORDER BY percentage DESC
+        )
+        FROM religion
+        ORDER BY country, percentage DESC
+    ) rank_filter WHERE RANK <= 3) 
+ SELECT topthree.*, poorest.cn, poorest.gdp
+ FROM (SELECT country as cn, gdp FROM economy ORDER BY gdp LIMIT 10) as poorest
+ JOIN topthree ON topthree.country = poorest.cn
+ ORDER by poorest.gdp, topthree.percentage;

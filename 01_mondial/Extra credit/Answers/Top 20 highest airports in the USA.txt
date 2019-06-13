@@ -1,0 +1,5 @@
+Top 20 highest airports in the USA
+
+select country, name, elevation from airport 
+where country = 'USA'
+order by elevation desc nulls last limit 20;

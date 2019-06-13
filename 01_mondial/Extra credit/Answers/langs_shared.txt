@@ -1,0 +1,15 @@
+Languages shared across borders (list the language and the two countries it goes across)
+
+# This one is particularly challenging. I basically strategically added on different countries to the table, so that I got a table that had matching country placements either in country columns 1 and 4 or Country columns 2 and 3. I left my table with overlapping columns and languages so you could see the logic of the table that I built. 
+
+
+select myborders.ln, myborders.c1, myborders.c2, 
+myborders.c3, lg.country, myborders.lang, lg.name
+from (select borders.length ln, borders.country1 c1,
+	  borders.country2 c2, language.country c3, language.name lang from borders
+join language on borders.country2 = language.country) as myborders
+join language as lg on myborders.c1 = lg.country
+where myborders.c1 = lg.country 
+AND myborders.c2 = myborders.c3 
+AND myborders.lang = lg.name
+order by myborders.ln desc nulls last;

@@ -1,0 +1,9 @@
+What is the correlation between the number of religions and the number of languages spoken? 
+
+SELECT rcount.country, rc, lc FROM
+(SELECT country, count(country) rc 
+	FROM religion GROUP BY country) as rcount
+JOIN (SELECT country, count(country) lc 
+	  FROM language GROUP BY country) as lcount
+ON rcount.country = lcount.country
+ORDER BY lc DESC, rc DESC;

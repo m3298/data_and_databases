@@ -1,0 +1,10 @@
+Which countries share the longest border? 
+# This is a good example of a triple join.
+
+SELECT borders.country1, c1.name, c2.name, 
+borders.country2, borders.length
+FROM borders JOIN country AS c1 
+ON c1.code = borders.country1
+JOIN country AS c2 
+ON c2.code = borders.country2
+ORDER BY borders.length DESC NULLS LAST;

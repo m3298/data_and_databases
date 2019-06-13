@@ -1,0 +1,15 @@
+What is the type of government for the countries with the ten highest and lowest GDP? 
+
+/*Two separate queries, Highest:*/
+
+SELECT politics.country, government, gdp 
+FROM politics JOIN economy 
+ON politics.country = economy.country 
+ORDER BY gdp DESC NULLS LAST LIMIT 10;
+
+/*Lowest:*/
+
+SELECT politics.country, government, gdp 
+FROM politics JOIN economy 
+ON politics.country = economy.country 
+ORDER BY gdp LIMIT 10;

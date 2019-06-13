@@ -1,0 +1,12 @@
+The GDP of the most populous country on each continent. 
+
+#This one is very advanced! DISTINCT ON () allows you to choose one distinct row per unique value in the category/column you choose. And magically, if you order it, it will pick out the top results for each distinct value in that column. So this is making a table with populations for every country along with their continent, then after we order populations DISTINCT ON () pulls out the row for each distinct continent that comes up first in that order.
+
+SELECT DISTINCT ON (encompasses.continent) 
+encompasses.continent, country.name, 
+economy.gdp, country.population
+FROM country
+JOIN encompasses ON encompasses.country = country.code
+JOIN economy ON encompasses.country = economy.country
+ORDER BY encompasses.continent, country.population 
+DESC NULLS LAST;

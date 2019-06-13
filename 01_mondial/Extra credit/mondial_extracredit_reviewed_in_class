@@ -1,0 +1,468 @@
+# Minami Funakoshi
+# 6-3-2019
+# Data and Databases
+# SQL Extra Credit
+
+# The GDP of the most populous country on each continent.
+
+###################################### MY ANSWER ####################################
+
+SELECT DISTINCT ON (encompasses.continent) encompasses.continent, country.name AS country_name, 
+country.population, economy.gdp from country
+JOIN encompasses ON encompasses.country = country.code
+JOIN economy ON encompasses.country = economy.country
+ORDER BY encompasses.continent, country.population DESC NULLS LAST
+;
+
+####################################### WORK PROCESS; IGNORE ####################################
+SELECT encompasses.country country_name, economy.gdp gdp, country.population pop FROM economy, encompasses, country
+GROUP BY encompasses.continent
+ORDER BY country.population DESC;
+
+# most populous country on each continent
+# show gdp
+
+SELECT * from encompasses
+
+SELECT encompasses.continent, MAX(country.population) max_pop from country
+JOIN encompasses ON encompasses.country = country.code
+GROUP BY encompasses.continent;
+
+# Which countries have the highest mountains? (Need full name of country)
+
+SELECT mountain.name, elevation, country.name FROM mountain
+JOIN geo_mountain ON geo_mountain.mountain = mountain.name
+JOIN country ON geo_mountain.country = country.code
+ORDER BY elevation DESC NULLS LAST
+;
+
+# Which countries share the longest border? (Need full name of country)
+
+SELECT country_a.name as country_a_name, country_b.name as country_b_name, length FROM borders
+JOIN country AS country_a ON country1 = country_a.code
+JOIN country AS country_b ON country2 = country_b.code
+ORDER BY length DESC NULLS LAST
+;
+
+# Top 3 most common religions in the 10 poorest countries in the world.
+####################################### MY ANSWER ####################################
+
+WITH poorest_ten AS (
+  SELECT 
+    country.code AS country_code,
+    country.name AS country_name,
+    economy.gdp AS gdp,
+    country.population AS pop 
+  FROM economy
+  JOIN country ON country.code = economy.country
+  ORDER BY economy.gdp
+  LIMIT 10
+)
+SELECT
+  religion.name as religion,
+  SUM(religion.percentage * poorest_ten.pop) no_followers
+FROM poorest_ten
+JOIN religion ON poorest_ten.country_code = religion.country
+GROUP BY religion.name
+ORDER BY no_followers DESC
+LIMIT 3
+;
+
+    religion    | no_followers 
+----------------+--------------
+ Roman Catholic |    6764881.7
+ Protestant     |    4608789.6
+ Christian      |      1002500
+(3 rows)
+
+####################################### WORK PROCESS; IGNORE ####################################
+# some of the poorest ten countries don't have any religions listed
+
+WITH poorest_ten AS (
+  SELECT 
+    country.code AS country_code,
+    country.name AS country_name,
+    economy.gdp AS gdp,
+    country.population AS pop 
+  FROM economy
+  JOIN country ON country.code = economy.country
+  ORDER BY economy.gdp
+  LIMIT 10
+)
+SELECT 
+  poorest_ten.country_name,
+  religion.name as religion,
+  religion.country,
+  religion.percentage * poorest_ten.pop no_followers 
+FROM poorest_ten
+JOIN religion ON poorest_ten.country_code = religion.country
+ORDER BY no_followers DESC, poorest_ten.country_name 
+;
+
+SELECT religion.name, poorest_ten.country_name, religion.percentage * poorest_ten.pop no_followers 
+FROM poorest_ten
+JOIN religion ON poorest_ten.country_name = religion.country
+ORDER BY no_followers DESC 
+;
+
+SELECT religion.name, religion.country, religion.percentage * country.population no_followers FROM religion
+JOIN country ON country.code = religion.country
+ORDER BY no_followers DESC 
+;
+
+subquery 10 poorest
+join that w country table to get pop data
+join with religion pct
+multiply pct by population
+group by religion, then order
+
+# What is the correlation between the number of religions and the number of languages spoken?
+####################################### MY ANSWER ####################################
+WITH lang_religion AS (
+SELECT 
+  country.name as country,
+  COUNT(DISTINCT religion.name) as no_religions,
+  COUNT(DISTINCT language.name) as no_languages
+FROM religion
+JOIN language ON religion.country = language.country
+JOIN country ON religion.country = country.code
+GROUP BY country.name
+)
+SELECT corr(lang_religion.no_religions, lang_religion.no_languages)
+FROM lang_religion
+;
+        corr        
+--------------------
+ 0.0613712657702464
+
+####################################### WORK PROCESS; IGNORE ####################################
+SELECT 
+  country.name as country,
+  COUNT(DISTINCT religion.name) as no_religions,
+  COUNT(DISTINCT language.name) as no_languages
+FROM religion
+JOIN language ON religion.country = language.country
+JOIN country ON religion.country = country.code
+GROUP BY country.name
+;
+
+SELECT corr(t1.col1, t2.col2)
+FROM table1 t1
+     JOIN table2 t2
+         ON t1.join_field = t2.join_field
+WHERE
+     <filters for t1>
+     AND
+     <filters for t2>
+
+# Rank countries which gained independence after 1990 by their GDP
+########################### MY ANSWER ########################
+SELECT country.name AS country, economy.gdp as gdp, independence FROM politics
+JOIN country ON country.code = politics.country
+JOIN economy ON politics.country = economy.country
+WHERE independence > '1990-12-31'::date
+ORDER BY gdp DESC NULLS LAST
+LIMIT 10
+;
+
+    country     |   gdp   | independence 
+----------------+---------+--------------
+ Russia         | 2113000 | 1991-08-24
+ Kazakhstan     |  224900 | 1991-12-16
+ Czech Republic |  194800 | 1993-01-01
+ Ukraine        |  175500 | 1991-12-01
+ Slovakia       |   96960 | 1993-01-01
+ Azerbaijan     |   76010 | 1991-08-30
+ Belarus        |   69240 | 1991-08-25
+ Croatia        |   59140 | 1991-06-25
+ Uzbekistan     |   55180 | 1991-08-31
+ Slovenia       |   46820 | 1991-06-25
+
+####################################### WORK PROCESS; IGNORE ####################################
+SELECT country, independence FROM politics
+WHERE independence > '1990-12-31'::date
+;
+
+SELECT politics.country, independence FROM politics
+JOIN country ON country.code = politics.country
+WHERE independence > '1990-12-31'::date
+;
+
+# What is the type of government for the countries with the ten highest and lowest GDP?
+########################### MY ANSWER ########################
+# Govt type for countries with the ten highest GDP
+WITH ten_highest_gdp AS (
+SELECT 
+  country.name AS country,
+  country.code AS country_code,
+  economy.gdp AS gdp
+FROM economy
+JOIN country ON country.code = economy.country
+ORDER BY gdp DESC NULLS LAST
+LIMIT 10
+)
+SELECT ten_highest_gdp.country, politics.government as gov_type
+FROM ten_highest_gdp
+JOIN politics ON politics.country = ten_highest_gdp.country_code
+ORDER BY gdp DESC NULLS LAST
+;
+
+    country     |                                gov_type                                
+----------------+------------------------------------------------------------------------
+ United States  | constitution-based federal republic; strong democratic tradition
+ China          | Communist state
+ Japan          | a parliamentary government with a constitutional monarchy
+ Germany        | federal republic
+ France         | republic
+ United Kingdom | constitutional monarchy and Commonwealth realm
+ Brazil         | federal republic
+ Russia         | federation
+ Italy          | republic
+ Canada         | a parliamentary democracy, a federation, and a constitutional monarchy
+
+# Govt type for countries with the ten lowest GDP
+WITH ten_highest_gdp AS (
+SELECT 
+  country.name AS country,
+  country.code AS country_code,
+  economy.gdp AS gdp
+FROM economy
+JOIN country ON country.code = economy.country
+ORDER BY gdp
+LIMIT 10
+)
+SELECT ten_highest_gdp.country, politics.government as gov_type
+FROM ten_highest_gdp
+JOIN politics ON politics.country = ten_highest_gdp.country_code
+ORDER BY gdp DESC NULLS LAST
+;
+
+####################################### WORK PROCESS; IGNORE ####################################
+WITH ten_highest_gdp AS (
+SELECT 
+  country.name AS country,
+  country.code AS country_code,
+  economy.gdp AS gdp
+FROM economy
+JOIN country ON country.code = economy.country
+ORDER BY gdp DESC NULLS LAST
+LIMIT 10
+)
+SELECT ten_highest_gdp.country, politics.government as gov_type
+FROM ten_highest_gdp
+JOIN politics ON politics.country = ten_highest_gdp.country_code
+ORDER BY gdp DESC NULLS LAST
+;
+
+SELECT government FROM politics;
+
+# Top 5 rivers that flow through the most provinces in Eastern Europe (or just Europe)
+########################### MY ANSWER ########################
+## DON'T use COUNT(DISTINCT) because this would filter out provinces with the exact same name in different countries. We are trusting that there are no duplicate entries.
+
+SELECT river, COUNT(DISTINCT geo_river.province) as no_provinces FROM geo_river
+JOIN encompasses ON encompasses.country = geo_river.country
+WHERE encompasses.continent = 'Europe'
+GROUP BY river
+ORDER BY no_provinces DESC NULLS LAST
+LIMIT 5
+;
+
+ river | no_provinces 
+-------+--------------
+ Donau |           33
+ Rhein |           18
+ Volga |           13
+ Dnepr |           12
+ Elbe  |           12
+
+ ## THIRKFIELD ANSWER
+
+WITH euroCountries AS (
+SELECT country FROM encompasses WHERE continent = 'Europe' AND percentage = 100
+)
+SELECT geo_river.river, COUNT(geo_river.province) no_provinces
+FROM euroCountries JOIN geo_river ON geo_river.country = euroCountries.country
+GROUP BY river
+ORDER BY no_provinces DESC
+LIMIT 8
+;
+
+  river  | no_provinces 
+---------+--------------
+ Donau   |           33
+ Rhein   |           18
+ Elbe    |           12
+ Dnepr   |           11
+ Theiss  |           10
+ Oder    |           10
+ Dnister |            8
+ Drau    |            8
+
+
+####################################### WORK PROCESS; IGNORE ####################################
+SELECT river, country, province FROM geo_river;
+
+SELECT * FROM continent;
+
+# The 5 tallest mountains in Greece
+########################### MY ANSWER ########################
+SELECT DISTINCT mountain.name as mountain_name, mountain.elevation, country.name as country FROM mountain
+JOIN geo_mountain ON geo_mountain.mountain = mountain.name
+JOIN country on geo_mountain.country = country.code
+WHERE country.name = 'Greece'
+ORDER BY mountain.elevation DESC NULLS LAST
+LIMIT 10
+;
+
+ mountain_name  | elevation | country 
+----------------+-----------+---------
+ Olymp          |      2917 | Greece
+ Smolikas       |      2637 | Greece
+ Profitis Ilias |      2497 | Greece
+ Psiloritis     |      2456 | Greece
+ Kyllini        |      2376 | Greece
+ Athos          |      2033 | Greece
+ Dirfi          |      1743 | Greece
+ Aenos          |      1628 | Greece
+ Fengari        |      1611 | Greece
+ Kerkis         |      1433 | Greece
+
+####################################### WORK PROCESS; IGNORE ####################################
+select * from country where name = 'Greece';
+ # code = GR
+
+SELECT mountain.name as mountain_name, mountain.elevation, country.name as country FROM mountain
+JOIN geo_mountain ON geo_mountain.mountain = mountain.name
+JOIN country on geo_mountain.country = country.code
+WHERE country.name = 'Greece'
+ORDER BY mountain.elevation DESC NULLS LAST
+LIMIT 10
+;
+
+# Languages shared across borders (list the language and the two countries it goes across)
+########################### FINAL ANSWER ########################
+# NO REDUNDANCY
+
+SELECT
+  tbl_language_a.name AS language_shared,
+  tbl_country_a.name AS country_a,
+  tbl_country_b.name AS country_b
+FROM borders 
+JOIN language AS tbl_language_a ON tbl_language_a.country = country1
+JOIN language AS tbl_language_b ON tbl_language_b.country = country2
+JOIN country as tbl_country_a ON tbl_country_a.code = country1
+JOIN country as tbl_country_b ON tbl_country_b.code = country2
+WHERE tbl_language_a.name = tbl_language_b.name
+ORDER BY language_shared
+;
+
+########################### ANSWER 1 ########################
+
+WITH countries_borders AS (
+  SELECT country1 as country_a, country2 as country_b FROM borders
+  UNION
+  SELECT country2 as country_a, country1 as country_b FROM borders
+  ORDER BY country_a
+)
+select
+  tbl_language_a.name AS language_a,
+  tbl_language_b.name AS language_b,
+  tbl_country_a.name,
+  tbl_country_b.name
+FROM countries_borders 
+JOIN language AS tbl_language_a ON tbl_language_a.country = country_a
+JOIN language AS tbl_language_b ON tbl_language_b.country = country_b
+JOIN country as tbl_country_a ON tbl_country_a.code = country_a
+JOIN country as tbl_country_b ON tbl_country_b.code = country_b
+WHERE tbl_language_a.name = tbl_language_b.name
+;
+########################### ANSWER 2 ########################
+
+WITH border_countries AS (
+SELECT 
+  country1 AS country_a, 
+  country2 AS country_b FROM borders
+UNION
+SELECT 
+  country2 AS country_a, 
+  country1 AS country_b FROM borders
+ORDER BY country_a
+)
+SELECT 
+  tbl_lang_a.name AS lang_a, 
+  tbl_lang_b.name AS lang_b,
+  tbl_country_a.name AS country_a,
+  tbl_country_b.name AS country_b
+FROM border_countries
+JOIN language AS tbl_lang_a ON tbl_lang_a.country = border_countries.country_a
+JOIN language AS tbl_lang_b ON tbl_lang_b.country = border_countries.country_b
+JOIN country AS tbl_country_a ON tbl_country_a.code = border_countries.country_a
+JOIN country AS tbl_country_b ON tbl_country_b.code = border_countries.country_a
+WHERE tbl_lang_a.name = tbl_lang_b.name
+GROUP BY tbl_country_a.name
+ORDER BY tbl_lang_a.name
+;
+
+!!!!!!!! How to eliminate duplicates where country_a = country_b, country_b = country_a?!!!!!!!
+ language_a | language_b |      name       |      name       
+------------+------------+-----------------+-----------------
+ Albanian   | Albanian   | Montenegro      | Albania
+ Albanian   | Albanian   | North Macedonia | Albania
+ Albanian   | Albanian   | Kosovo          | North Macedonia
+ Albanian   | Albanian   | Albania         | Kosovo
+ Albanian   | Albanian   | Kosovo          | Albania
+ Albanian   | Albanian   | North Macedonia | Kosovo
+ Albanian   | Albanian   | Kosovo          | Montenegro
+ Albanian   | Albanian   | Albania         | Montenegro
+ Albanian   | Albanian   | Albania         | North Macedonia
+ Albanian   | Albanian   | Montenegro      | Kosovo
+
+######################## WORK PROCESS; 2nd ATTEMPT ########################
+
+\d borders
+SELECT * FROM borders;
+
+### Edit the columns so that country_a and country_b match;
+### i.e. if MEX borders USA, you should see MEX/USA as well as USA/MEX
+
+WRONG:
+WITH border_countries AS (
+  SELECT
+  country1 AS country_a,                                                                                            country2 AS country_b FROM borders                                                                                UNION                                                                                                             SELECT                                                                                                            country2 AS country_a,                                                                                           
+  country1 AS country_b FROM borders   
+  ORDER BY country_a
+  )
+SELECT 
+  lang_a.name AS lang_a, 
+  lang_b.name AS lang_b, 
+  country_a.name AS country_a, 
+  country_b.name AS country_b
+FROM border_countries                                                                                               JOIN language AS lang_a ON lang_a.country = border_countries.country_a
+JOIN language AS lang_b ON lang_b.country = border_countries.country_b    
+JOIN country AS country_a ON country_a.code = border_countries.country_a
+JOIN country AS country_b ON country_b.code = border_countries.country_a        
+WHERE lang_a.name = lang_b.name    
+ORDER BY lang_a                                                                                                     ;
+
+SELECT country1, country2, lang_a.name AS lang_a, lang_b.name AS lang_b FROM borders
+JOIN language AS lang_a ON lang_a.country = country1
+JOIN language AS lang_b ON lang_b.country = country2
+;
+
+######################## WORK PROCESS; 1st_ATTEMPT ########################
+
+SELECT borders.country1, borders.country2, name from language
+JOIN borders ON borders.country1 = language.country
+ORDER BY language.name
+;
+
+
+SELECT borders.country1, borders.country2, language.name AS language from borders
+JOIN language ON borders.country1 = language.country
+;
+
+
+SELECT country, name from language
+JOIN borders ON borders.country1 = language.country
+;

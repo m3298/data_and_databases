@@ -1,0 +1,270 @@
+# Minami Funakoshi
+# 6-2-2019
+# Data and Databases
+# Homework 1.2
+
+# PREVIOUSLY:
+create database mondial;
+\c mondial
+
+\i /Users/minami/Documents/data_and_databases/class1_mondial/mondial-schema.psql
+\i /Users/minami/Documents/data_and_databases/class1_mondial/mondial-inputs.psql
+
+# PART ONE: WARM-UP (1 POINTS)
+# A explore the 'economy' table (\d economy) to get familiar with what columns are in there. 
+# Do a SELECT * FROM economy; to check out some rows, and press q to get back to the prompt. Then begin:
+
+# 1) Find the top 10 countries by GDP using: SELECT -- FROM -- ORDER BY -- LIMIT --
+
+SELECT * FROM economy ORDER BY gdp DESC NULLS LAST LIMIT 10;
+
+ country |   gdp    | agriculture | service | industry | inflation | unemployment 
+---------+----------+-------------+---------+----------+-----------+--------------
+ USA     | 16720000 |         1.1 |    79.4 |     19.5 |       1.5 |          7.3
+ CN      |  9330000 |          10 |    46.1 |     43.9 |       2.6 |          4.1
+ J       |  5007000 |         1.1 |    73.2 |     25.6 |       0.2 |          4.1
+ D       |  3593000 |         0.8 |      69 |     30.1 |       1.6 |          5.3
+ F       |  2739000 |         1.9 |    79.4 |     18.7 |       0.9 |         10.2
+ GB      |  2490000 |         0.7 |    78.9 |     20.5 |         2 |          7.2
+ BR      |  2190000 |         5.5 |    68.1 |     26.4 |       6.2 |          5.7
+ R       |  2113000 |         4.2 |    58.3 |     37.5 |       6.8 |          5.8
+ I       |  2068000 |           2 |    73.5 |     24.4 |       1.2 |         12.4
+ CDN     |  1825000 |         1.7 |    69.9 |     28.4 |         1 |          7.1
+(10 rows)
+
+# 2) Get a list of countries with the GDP below 20000 using: SELECT -- FROM -- WHERE --
+SELECT * FROM economy WHERE gdp < 20000 ORDER BY gdp;
+
+ country |  gdp  | agriculture | service | industry | inflation | unemployment 
+---------+-------+-------------+---------+----------+-----------+--------------
+ TOK     |   1.5 |             |         |          |           |             
+ NIUE    |    10 |        23.5 |    49.5 |     26.9 |         4 |           12
+ HELX    |    18 |             |         |          |           |             
+ MNTS    |    29 |         1.6 |    75.1 |     23.2 |       4.5 |            6
+ TUV     |    38 |        16.6 |    56.2 |     27.2 |       3.8 |             
+ WAFU    |    60 |             |         |          |       2.8 |         12.2
+ NAU     |   100 |         6.1 |    60.8 |       33 |      -3.6 |           90
+ FALK    | 164.5 |          95 |         |          |       1.2 |          4.1
+ KIR     |   173 |        24.3 |    67.8 |      7.9 |       0.2 |            2
+ AXA     | 175.4 |         2.5 |    73.8 |     23.6 |       3.1 |            8
+ COOK    | 183.2 |         5.1 |    82.1 |     12.7 |       2.2 |         13.1
+ MH      |   193 |        14.3 |    71.8 |     13.9 |      12.9 |           36
+
+# 3) Get a list of countries sorted by the highest rates inflation: SELECT -- FROM -- ORDER BY --
+
+SELECT country, inflation FROM economy ORDER BY inflation DESC NULLS LAST;
+
+ country | inflation 
+---------+-----------
+ SYR     |      59.1
+ YV      |      56.2
+ IR      |      42.3
+ MW      |      26.9
+ SUD     |        25
+ RA      |      20.8
+ BY      |        19
+ WEST    |        14
+ ER      |        13
+ MH      |      12.9
+ RG      |      11.9
+ YE      |      11.8
+ 
+# 4) List all countries with the majority of their GDP coming from agriculture: SELECT -- FROM -- WHERE --
+
+SELECT country, gdp, agriculture FROM economy WHERE agriculture > 50 ORDER BY agriculture DESC NULLS LAST;
+
+ country |  gdp  | agriculture 
+---------+-------+-------------
+ FALK    | 164.5 |          95
+ LB      |  1977 |        76.9
+ SP      |  2372 |        59.3
+ GNB     |   880 |          58
+ RCA     |  2050 |        56.6
+ COM     |   658 |          51
+
+# 5) Create a list of countries in order of highest unemployment, and join the table 
+# with the country table so you get the names of the countries not the country code: 
+# SELECT -- FROM -- JOIN - ON -- ORDER BY --
+
+### Watch out for what I select -- country.name vs economy.country
+
+SELECT country.name, economy.unemployment FROM economy JOIN country ON economy.country = country.code
+ORDER BY unemployment DESC NULLS LAST;
+
+               name               | unemployment 
+----------------------------------+--------------
+ Zimbabwe                         |           95
+ Nauru                            |           90
+ Liberia                          |           85
+ Burkina Faso                     |           77
+ Turkmenistan                     |           60
+ Djibouti                         |           59
+ Congo                            |           53
+ Senegal                          |           48
+ Nepal                            |           46
+ Bosnia and Herzegovina           |         44.3
+ Haiti                            |         40.6
+ Swaziland                        |           40
+ Kenya                            |           40
+ Marshall Islands                 |           36
+ Yemen                            |           35
+ Afghanistan                      |           35
+ Grenada                          |         33.5
+
+# 6) Invent your own query for the economy table--as simple or as complicated as you want it to be.
+
+SELECT country.name AS country, economy.gdp AS GDP, economy.inflation, economy.unemployment FROM economy
+JOIN country on economy.country = country.code
+WHERE inflation > 10 ORDER BY inflation DESC NULLS LAST LIMIT 20;
+
+    country      |  gdp   | inflation | unemployment 
+------------------+--------+-----------+--------------
+ Syria            |  64700 |      59.1 |         17.8
+ Venezuela        | 367500 |      56.2 |          7.9
+ Iran             | 411900 |      42.3 |           16
+ Malawi           |   3683 |      26.9 |             
+ Sudan            |  52500 |        25 |           20
+ Argentina        | 484600 |      20.8 |          7.5
+ Belarus          |  69240 |        19 |            1
+ West Bank        |   3700 |        14 |             
+ Eritrea          |   3438 |        13 |             
+ Marshall Islands |    193 |      12.9 |           36
+ Guinea           |   6544 |      11.9 |             
+ Yemen            |  43890 |      11.8 |           35
+ Sierra Leone     |   4607 |      11.1 |             
+ Bhutan           |   2133 |        11 |          2.1
+ Ghana            |  45550 |        11 |           11
+ Uzbekistan       |  55180 |      10.1 |          4.9
+
+# PART TWO: AGGREGATE QUERIES (3 POINTS)
+# Do the following for queries using the 'language' table.
+
+# 1) Find the top 10 most dominant languages (highest percentage) in their respective countries. 
+# This isn't an aggregate query, use ORDER BY along with other stuff.
+
+SELECT name AS language, percentage FROM language
+ORDER BY percentage DESC NULLS LAST LIMIT 10;
+
+  language  | percentage 
+------------+------------
+ English    |        100
+ Portuguese |        100
+ Icelandic  |        100
+ Italian    |        100
+ Russian    |        100
+ German     |        100
+ Dutch      |        100
+ German     |        100
+ Polish     |        100
+ Burmese    |        100
+
+# 2) Get a list of the 10 countries with the most languages according to this database. 
+# This is an aggregate query. This should have two columns, the country and 
+# the number of languages in the country. Hint: you will be using COUNT() and GROUP BY along with other stuff.
+
+SELECT country, COUNT(language) FROM language
+GROUP BY country ORDER BY COUNT(language) DESC NULLS LAST LIMIT 10;
+
+ country | count 
+---------+-------
+ PK      |     8
+ IR      |     7
+ SF      |     7
+ AUS     |     6
+ NLSM    |     6
+ GNB     |     6
+ NZ      |     6
+ BZ      |     6
+ MC      |     6
+ A       |     6
+
+# 3) Get the same list, but join the country code to the country table so you get the full names of the countries.
+
+SELECT country.name AS country, COUNT(language) AS number_of_languages FROM language
+JOIN country ON language.country = country.code
+GROUP BY country.name ORDER BY number_of_languages DESC NULLS LAST LIMIT 10;
+
+    country    | number_of_languages 
+---------------+---------------------
+ Pakistan      |                   8
+ Finland       |                   7
+ Iran          |                   7
+ Austria       |                   6
+ New Zealand   |                   6
+ Sint Maarten  |                   6
+ Australia     |                   6
+ Monaco        |                   6
+ Belize        |                   6
+ Guinea-Bissau |                   6
+
+# 4) Get a list of the 10 languages that are most commonly found from country to country. 
+# This should have two columns, the language and the number of countries it appears in.
+
+SELECT name AS language, COUNT(country) AS no_countries_spoken FROM language
+GROUP BY name ORDER BY COUNT(country) DESC NULLS LAST LIMIT 10;
+
+  language  | no_countries_spoken 
+------------+---------------------
+ English    |                  35
+ Spanish    |                  26
+ French     |                  17
+ Russian    |                  14
+ German     |                  11
+ Portuguese |                  10
+ Arabic     |                   8
+ Creole     |                   6
+ Serbian    |                   6
+ Turkish    |                   6
+
+# 5) Get a list of the 20 languages that are most commonly found from country to country.
+# This is just like the previous query, except it should have a third column that has 
+# the average percentage of the population that speaks the language.
+
+SELECT name AS language, COUNT(country) AS no_countries_spoken, AVG(percentage) AS avg_pct FROM language
+GROUP BY name ORDER BY COUNT(language) DESC NULLS LAST LIMIT 20;
+
+ language  | no_countries_spoken |       avg_pct       
+------------+---------------------+---------------------
+ English    |                  35 | 55.9428571428571429
+ Spanish    |                  26 | 72.6423076923076923
+ French     |                  17 | 42.2647058823529412
+ Russian    |                  14 | 23.5857142857142857
+ German     |                  11 | 36.1363636363636364
+ Portuguese |                  10 | 43.9600000000000000
+ Arabic     |                   8 | 49.8125000000000000
+ Turkish    |                   6 | 18.8333333333333333
+ Serbian    |                   6 | 26.8833333333333333
+ Creole     |                   6 | 53.3833333333333333
+ Albanian   |                   5 | 44.2600000000000000
+ Dutch      |                   5 | 34.0400000000000000
+ Italian    |                   5 | 45.1200000000000000
+ Roma       |                   5 |  1.9400000000000000
+ Hungarian  |                   5 | 22.9800000000000000
+ Greek      |                   4 | 44.7000000000000000
+ Croatian   |                   3 | 35.2000000000000000
+
+# 6) Finally, modify that last query so that you only get languages that are spoken in more than 
+# four countries, but order the results by the highest average percentage of speakers. 
+# Hint: you need to use HAVING along with other stuff.
+
+SELECT name AS language, COUNT(country) as no_countries_spoken, AVG(percentage) AS avg_pct FROM language
+GROUP BY name HAVING COUNT(country) > 4
+ORDER BY AVG(percentage) DESC NULLS LAST LIMIT 20;
+
+  language  | no_countries_spoken |       avg_pct       
+------------+---------------------+---------------------
+ Spanish    |                  26 | 72.6423076923076923
+ English    |                  35 | 55.9428571428571429
+ Creole     |                   6 | 53.3833333333333333
+ Arabic     |                   8 | 49.8125000000000000
+ Italian    |                   5 | 45.1200000000000000
+ Albanian   |                   5 | 44.2600000000000000
+ Portuguese |                  10 | 43.9600000000000000
+ French     |                  17 | 42.2647058823529412
+ German     |                  11 | 36.1363636363636364
+ Dutch      |                   5 | 34.0400000000000000
+ Serbian    |                   6 | 26.8833333333333333
+ Russian    |                  14 | 23.5857142857142857
+ Hungarian  |                   5 | 22.9800000000000000
+ Turkish    |                   6 | 18.8333333333333333
+ Roma       |                   5 |  1.9400000000000000

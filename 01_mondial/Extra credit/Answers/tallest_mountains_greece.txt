@@ -1,0 +1,6 @@
+SELECT DISTINCT geo_mountain.country, 
+mountain.name, mountain.elevation
+FROM mountain JOIN geo_mountain 
+ON mountain.name = geo_mountain.mountain
+WHERE geo_mountain.country = 'GR'
+ORDER BY mountain.elevation DESC LIMIT 5;

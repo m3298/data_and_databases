@@ -1,0 +1,13 @@
+Governments that gained independence between Jan. 1 1950 and Dec. 31, 1999
+
+SELECT country, independence FROM politics 
+WHERE independence 
+BETWEEN '1950-01-02' AND '1999-12-31' 
+ORDER BY independence;
+
+SELECT country.name, independence 
+FROM politics JOIN country 
+ON country.code = politics.country 
+WHERE independence 
+BETWEEN '1950-01-02' AND '1999-12-31' 
+ORDER BY independence;

@@ -1,0 +1,14 @@
+Rank countries which gained independence after 1990 by their GDP
+
+SELECT country, independence 
+FROM politics 
+WHERE independence > '1990-12-31' 
+ORDER BY independence;
+
+/*After I isolated that part I extended the query to gdp*/
+
+SELECT politics.country, independence, gdp 
+FROM politics JOIN economy 
+ON politics.country = economy.country 
+WHERE independence > '1990-12-31' 
+ORDER BY gdp DESC NULLS LAST;
